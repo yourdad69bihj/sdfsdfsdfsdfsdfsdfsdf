@@ -1,92 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan's Menu | Access Hub</title>
+    <title>Jordan's Menu | Dynamic Key Hub</title>
     <style>
-        :root { --red: #ff0000; --dark: #0a0a0a; --card: #151515; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        
-        .container { background: var(--card); padding: 40px; border-radius: 15px; border: 2px solid var(--red); box-shadow: 0 0 30px rgba(255, 0, 0, 0.2); width: 350px; text-align: center; }
-        h1 { color: var(--red); text-transform: uppercase; letter-spacing: 3px; margin: 0 0 10px 0; }
-        .user-id { color: #888; font-size: 12px; margin-bottom: 20px; }
-        
-        .key-display { background: #000; border: 1px dashed var(--red); padding: 20px; font-size: 28px; color: var(--red); font-family: monospace; font-weight: bold; margin: 20px 0; display: none; }
-        
-        button { background: var(--red); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #cc0000; transform: scale(1.02); }
-        .logout-btn { background: #333; margin-top: 20px; font-size: 12px; display: none; }
-        .logout-btn:hover { background: #444; }
+        body { background: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #111; padding: 40px; border-radius: 15px; border: 2px solid #ff0000; text-align: center; width: 350px; box-shadow: 0 0 20px #ff000033; }
+        .key-box { background: #000; padding: 20px; font-size: 24px; color: #ff0000; font-family: monospace; margin: 20px 0; border: 1px dashed #444; word-break: break-all; }
+        button { background: #ff0000; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
+        .info { color: #666; font-size: 11px; margin-top: 10px; }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>Jordan's Menu</h1>
-        <div class="user-id" id="status">Waiting for Authentication...</div>
-
-        <div id="authContent">
-            <button id="genBtn" onclick="generateAndSave()">GENERATE ACCESS KEY</button>
-        </div>
-
-        <div id="keyArea">
-            <div class="key-display" id="keyDisplay">------</div>
-            <button onclick="copyKey()">COPY KEY</button>
-            <button class="logout-btn" id="logoutBtn" onclick="logout()">LOGOUT OF SESSION</button>
-        </div>
+    <div class="card">
+        <h1 style="color: #ff0000; margin:0;">JORDAN'S MENU</h1>
+        <p id="status" style="font-size:12px; color:#888;">Generating unique session key...</p>
+        <div class="key-box" id="keyDisplay">------</div>
+        <button onclick="copyKey()">COPY SESSION KEY</button>
+        <p class="info">This key is unique to this click and will expire shortly.</p>
     </div>
-
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('id');
-        
-        // On Page Load: Check if user is already logged in
-        window.onload = function() {
-            if (localStorage.getItem("jordan_auth_active") === "true") {
-                showKey();
-            } else if (userId) {
-                document.getElementById('status').innerText = "Logged in as ID: " + userId;
-            } else {
-                document.getElementById('status').innerText = "Error: Please open via Roblox Menu";
-                document.getElementById('genBtn').disabled = true;
-                document.getElementById('genBtn').style.opacity = "0.5";
-            }
-        }
+        let id = urlParams.get('id');
+        let seed = urlParams.get('seed'); // The random part
 
-        function generateAndSave() {
-            if (!userId) return;
-            localStorage.setItem("jordan_auth_active", "true");
-            localStorage.setItem("jordan_saved_id", userId);
-            showKey();
-        }
-
-        function showKey() {
-            const savedId = userId || localStorage.getItem("jordan_saved_id");
-            if (!savedId) return;
-
-            // Jordan's Secret Math: (ID + 67) Reversed
-            let math = (parseInt(savedId) + 67).toString();
-            let key = math.split("").reverse().join("");
-
+        if (id && seed) {
+            // New Math: (ID + Seed + 67) Reversed
+            let math = (parseInt(id) + parseInt(seed) + 67).toString();
+            let key = "JM-" + math.split("").reverse().join("");
             document.getElementById('keyDisplay').innerText = key;
-            document.getElementById('status').innerText = "Session Active for: " + savedId;
-            
-            // UI Swaps
-            document.getElementById('keyDisplay').style.display = "block";
-            document.getElementById('logoutBtn').style.display = "block";
-            document.getElementById('genBtn').style.display = "none";
+            document.getElementById('status').innerText = "Session ID: " + seed;
+        } else {
+            document.getElementById('keyDisplay').innerText = "INVALID LINK";
+            document.getElementById('status').innerText = "Please use the 'Get Key' button in-game.";
         }
 
         function copyKey() {
-            const key = document.getElementById('keyDisplay').innerText;
-            navigator.clipboard.writeText(key);
-            alert("Key copied! Paste it in the menu.");
-        }
-
-        function logout() {
-            localStorage.clear();
-            location.reload(); // Refresh page to reset
+            navigator.clipboard.writeText(document.getElementById('keyDisplay').innerText);
+            alert("Session Key Copied!");
         }
     </script>
 </body>
