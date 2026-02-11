@@ -1,55 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Jordan's Menu | Key Verification</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jordan's Menu | Access Hub</title>
     <style>
-        body { background: #0a0a0a; color: white; font-family: 'Inter', sans-serif; text-align: center; padding-top: 100px; }
-        .card { background: #111; padding: 40px; border-radius: 15px; border: 2px solid #ff0000; display: inline-block; width: 400px; }
-        h1 { color: #ff0000; margin: 0; }
-        .key-box { background: #000; padding: 20px; font-size: 32px; color: #ff0000; font-family: monospace; margin: 20px 0; border: 1px dashed #444; }
-        button { background: #ff0000; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
-        .timer { color: #666; font-size: 12px; margin-top: 10px; }
+        :root { --red: #ff0000; --dark: #0a0a0a; --card: #151515; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        .container { background: var(--card); padding: 40px; border-radius: 15px; border: 2px solid var(--red); box-shadow: 0 0 30px rgba(255, 0, 0, 0.2); width: 350px; text-align: center; }
+        h1 { color: var(--red); text-transform: uppercase; letter-spacing: 3px; margin: 0 0 10px 0; }
+        .user-id { color: #888; font-size: 12px; margin-bottom: 20px; }
+        
+        .key-display { background: #000; border: 1px dashed var(--red); padding: 20px; font-size: 28px; color: var(--red); font-family: monospace; font-weight: bold; margin: 20px 0; display: none; }
+        
+        button { background: var(--red); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #cc0000; transform: scale(1.02); }
+        .logout-btn { background: #333; margin-top: 20px; font-size: 12px; display: none; }
+        .logout-btn:hover { background: #444; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>JORDAN'S MENU</h1>
-        <p id="instruction">Click below to start the verification process.</p>
-        
-        <div id="keyArea" style="display:none;">
-            <p>Your Key:</p>
-            <div class="key-box" id="keyDisplay">LOADING...</div>
-            <button onclick="copyKey()">COPY KEY</button>
+
+    <div class="container">
+        <h1>Jordan's Menu</h1>
+        <div class="user-id" id="status">Waiting for Authentication...</div>
+
+        <div id="authContent">
+            <button id="genBtn" onclick="generateAndSave()">GENERATE ACCESS KEY</button>
         </div>
 
-        <button id="verifyBtn" onclick="startVerify()">VERIFY (GET KEY)</button>
-        <p class="timer">Verification takes ~30 seconds.</p>
+        <div id="keyArea">
+            <div class="key-display" id="keyDisplay">------</div>
+            <button onclick="copyKey()">COPY KEY</button>
+            <button class="logout-btn" id="logoutBtn" onclick="logout()">LOGOUT OF SESSION</button>
+        </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('id');
-        const isFinished = urlParams.get('finished'); // This is sent back by Linkvertise
-
-        if (isFinished === "true" && userId) {
-            document.getElementById('verifyBtn').style.display = "none";
-            document.getElementById('instruction').style.display = "none";
-            document.getElementById('keyArea').style.display = "block";
-            
-            // MATH: (ID + 67) reversed
-            let key = (parseInt(userId) + 67).toString().split("").reverse().join("");
-            document.getElementById('keyDisplay').innerText = key;
+        
+        // On Page Load: Check if user is already logged in
+        window.onload = function() {
+            if (localStorage.getItem("jordan_auth_active") === "true") {
+                showKey();
+            } else if (userId) {
+                document.getElementById('status').innerText = "Logged in as ID: " + userId;
+            } else {
+                document.getElementById('status').innerText = "Error: Please open via Roblox Menu";
+                document.getElementById('genBtn').disabled = true;
+                document.getElementById('genBtn').style.opacity = "0.5";
+            }
         }
 
-        function startVerify() {
-            // REPLACE THIS with your actual Linkvertise Link!
-            // Set your Linkvertise "Target URL" to: https://yourname.github.io/jordans-menu/?id=USERID&finished=true
-            window.location.href = "https://link-target.net/your-link-id/jordan-key"; 
+        function generateAndSave() {
+            if (!userId) return;
+            localStorage.setItem("jordan_auth_active", "true");
+            localStorage.setItem("jordan_saved_id", userId);
+            showKey();
+        }
+
+        function showKey() {
+            const savedId = userId || localStorage.getItem("jordan_saved_id");
+            if (!savedId) return;
+
+            // Jordan's Secret Math: (ID + 67) Reversed
+            let math = (parseInt(savedId) + 67).toString();
+            let key = math.split("").reverse().join("");
+
+            document.getElementById('keyDisplay').innerText = key;
+            document.getElementById('status').innerText = "Session Active for: " + savedId;
+            
+            // UI Swaps
+            document.getElementById('keyDisplay').style.display = "block";
+            document.getElementById('logoutBtn').style.display = "block";
+            document.getElementById('genBtn').style.display = "none";
         }
 
         function copyKey() {
-            navigator.clipboard.writeText(document.getElementById('keyDisplay').innerText);
-            alert("Key Copied!");
+            const key = document.getElementById('keyDisplay').innerText;
+            navigator.clipboard.writeText(key);
+            alert("Key copied! Paste it in the menu.");
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload(); // Refresh page to reset
         }
     </script>
 </body>
